@@ -1,39 +1,44 @@
 #ifndef SR_H
 #define SR_H
 
-#include "gbn.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
-// Define the maximum window size and buffer size
-#define WINDOW_SIZE 8
-#define MAX_SEQ 100
+#define MAX_SEQ 8          // Maximum sequence number
+#define MAX_PACKET_SIZE 1024  // Maximum packet size
 
-// Sender-related function declarations
-void A_output(struct msg message);
-void A_input(struct pkt packet);
-void A_timerinterrupt(void);
-void A_init(void);
+// Define the pkt struct (packet structure)
+struct pkt {
+    int seq_num;         // Sequence number of the packet
+    int ack_num;         // Acknowledgment number
+    char data[MAX_PACKET_SIZE];  // Data to be transmitted
+    int checksum;        // Checksum for error detection
+};
 
-// Receiver-related function declarations
-void B_input(struct pkt packet);
-void B_init(void);
+// Define the msg struct (message structure)
+struct msg {
+    char data[MAX_PACKET_SIZE];  // Data in the message
+};
 
-#endif
+// Function prototypes
+extern int calculate_checksum(struct pkt packet);  // Declaration for checksum calculation
+extern void tolayer3(int sender_id, struct pkt packet);  // Function for sending a packet to the network layer
+extern void starttimer(int sender_id, float time);     // Function for starting a timer
+extern void stoptimer(int sender_id);                  // Function for stopping a timer
+extern void tolayer5(char *data);                       // Function for delivering data to the application layer
 
-#include "sr.h"
+// Sliding window protocol variables
+extern int window_size;        // Size of the sliding window
+extern int base;               // Base sequence number for sender's window
+extern int next_seq_num;      // Sequence number of the next packet to be sent
+extern struct pkt send_buffer[MAX_SEQ];   // Send buffer to hold packets
+extern struct pkt receive_buffer[MAX_SEQ];  // Receive buffer to hold received packets
 
-// Calculate checksum for a given packet
-int calculate_checksum(struct pkt packet) {
-    int checksum = 0;
-    checksum += packet.seqnum;
-    checksum += packet.acknum;
+// Function declarations for sending and receiving packets
+void send_packet();
+void receive_packet(struct pkt packet);
+void start_sending();
 
-    // Add the payload data to the checksum calculation
-    for (int i = 0; i < 20; i++) {
-        checksum += packet.payload[i];
-    }
-
-    // Invert the checksum to meet the required format
-    checksum = ~checksum;
-
-    return checksum;
-}
+#endif  // SR_H
