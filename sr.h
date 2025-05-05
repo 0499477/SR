@@ -1,44 +1,44 @@
 #ifndef SR_H
 #define SR_H
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include "emulator.h"
 
-#define MAX_SEQ 8          // Maximum sequence number
-#define MAX_PACKET_SIZE 1024  // Maximum packet size
+#define MAX_SEQ 8      // Sequence number space
+#define WINDOW_SIZE 4  // Window size for Selective Repeat
 
-// Define the pkt struct (packet structure)
+// Packet structure
 struct pkt {
-    int seq_num;         // Sequence number of the packet
-    int ack_num;         // Acknowledgment number
-    char data[MAX_PACKET_SIZE];  // Data to be transmitted
-    int checksum;        // Checksum for error detection
+    int seqnum;        // Sequence number of the packet
+    int acknum;        // Acknowledgment number
+    int checksum;      // Checksum for error detection
+    char payload[20];  // Payload data
 };
 
-// Define the msg struct (message structure)
+// Message structure
 struct msg {
-    char data[MAX_PACKET_SIZE];  // Data in the message
+    char data[20];     // Data in the message
 };
 
-// Function prototypes
-extern int calculate_checksum(struct pkt packet);  // Declaration for checksum calculation
-extern void tolayer3(int sender_id, struct pkt packet);  // Function for sending a packet to the network layer
-extern void starttimer(int sender_id, float time);     // Function for starting a timer
-extern void stoptimer(int sender_id);                  // Function for stopping a timer
-extern void tolayer5(char *data);                       // Function for delivering data to the application layer
+// Declare function prototypes
+extern int calculate_checksum(struct pkt packet);
+extern void tolayer3(int calling_entity, struct pkt packet);
+extern void starttimer(int calling_entity, float time);
+extern void stoptimer(int calling_entity);
+extern void tolayer5(int calling_entity, char *data);
 
-// Sliding window protocol variables
-extern int window_size;        // Size of the sliding window
-extern int base;               // Base sequence number for sender's window
-extern int next_seq_num;      // Sequence number of the next packet to be sent
-extern struct pkt send_buffer[MAX_SEQ];   // Send buffer to hold packets
-extern struct pkt receive_buffer[MAX_SEQ];  // Receive buffer to hold received packets
+// SR state variables
+extern int next_seq_num;    // Next sequence number to send
+extern int base;            // Base of the sender's window
+extern int window_size;     // Size of the sender's window
+extern int expected_seq_num; // Expected sequence number at receiver
+extern struct pkt buffer[MAX_SEQ];  // Buffer for storing unacknowledged packets
+extern int ack_buffer[MAX_SEQ];      // Acknowledgment buffer
 
-// Function declarations for sending and receiving packets
-void send_packet();
-void receive_packet(struct pkt packet);
-void start_sending();
+// SR functions to be implemented
+void sr_output(struct msg message);
+void sr_input(struct pkt packet);
+void sr_timerinterrupt(void);
+void sr_init(void);
+void sr_receive(struct pkt packet);
 
-#endif  // SR_H
+#endif
