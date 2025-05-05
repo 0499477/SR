@@ -18,3 +18,22 @@ void B_input(struct pkt packet);
 void B_init(void);
 
 #endif
+
+#include "sr.h"
+
+// Calculate checksum for a given packet
+int calculate_checksum(struct pkt packet) {
+    int checksum = 0;
+    checksum += packet.seqnum;
+    checksum += packet.acknum;
+
+    // Add the payload data to the checksum calculation
+    for (int i = 0; i < 20; i++) {
+        checksum += packet.payload[i];
+    }
+
+    // Invert the checksum to meet the required format
+    checksum = ~checksum;
+
+    return checksum;
+}
